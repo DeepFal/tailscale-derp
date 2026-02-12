@@ -1,5 +1,9 @@
 # tailscale-derp
 
+[![Build and Push DERP Image](https://github.com/DeepFal/tailscale-derp/actions/workflows/build-and-push.yml/badge.svg)](https://github.com/DeepFal/tailscale-derp/actions/workflows/build-and-push.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/deepfal/tailscale-derp)](https://hub.docker.com/r/deepfal/tailscale-derp)
+[![Docker Image Version](https://img.shields.io/docker/v/deepfal/tailscale-derp?sort=semver)](https://hub.docker.com/r/deepfal/tailscale-derp/tags)
+
 可直接使用的 DERP 去除域名验证补丁镜像。
 
 ## 补丁目的
