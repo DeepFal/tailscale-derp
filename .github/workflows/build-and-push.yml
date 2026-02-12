@@ -98,12 +98,14 @@ jobs:
           last_build_time_match = re.search(r"- 最后构建更新时间（UTC）：`([^`]*)`", text)
           last_build_time = last_build_time_match.group(1) if last_build_time_match else stamp
 
+          text = re.sub(r"- 最新同步版本：`[^`]*`", f"- 最新同步版本：`{version}`", text)
+
+          if image_exists == "true":
+            last_result = "skipped"
+
           if image_exists == "false" and build_outcome in ("success", "failure"):
             last_result = build_outcome
             last_build_time = stamp
-
-          if image_exists == "false" and build_outcome == "success":
-            text = re.sub(r"- 最新同步版本：`[^`]*`", f"- 最新同步版本：`{version}`", text)
 
           text = re.sub(r"- 最后检查时间（UTC）：`[^`]*`", f"- 最后检查时间（UTC）：`{stamp}`", text)
           text = re.sub(r"- 上一次构建结果：`[^`]*`", f"- 上一次构建结果：`{last_result}`", text)

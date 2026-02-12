@@ -12,13 +12,13 @@
 ## 镜像标签
 
 - `deepfal/tailscale-derp:latest`
-- `deepfal/tailscale-derp:vX.Y.Z`（对应 Tailscale 发布版本）
+- `deepfal/tailscale-derp:v1.94.1`（对应 Tailscale 发布版本）
 
 ## 自动同步状态
 
-- 最新同步版本：`vX.Y.Z`
+- 最新同步版本：`v1.94.1`
 - 最后检查时间（UTC）：`2026-02-12 08:14 UTC`
-- 上一次构建结果：`pending`
+- 上一次构建结果：`skipped`
 - 最后构建更新时间（UTC）：`2026-02-12 08:13 UTC`
 
 ## 启动命令
