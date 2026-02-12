@@ -14,6 +14,11 @@
 - `deepfal/tailscale-derp:latest`
 - `deepfal/tailscale-derp:vX.Y.Z`（对应 Tailscale 发布版本）
 
+## 自动同步状态
+
+- 最新同步版本：`vX.Y.Z`
+- 最后自动更新时间（UTC）：`pending`
+
 ## 启动命令
 
 ```bash
