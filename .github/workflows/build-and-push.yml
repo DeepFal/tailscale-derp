@@ -68,7 +68,7 @@ jobs:
           file: ./dockerfile
           push: true
           build-args: |
-            DERPER_REF=latest
+            DERPER_REF=${{ steps.release.outputs.version }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/tailscale-derp:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/tailscale-derp:${{ steps.release.outputs.version }}

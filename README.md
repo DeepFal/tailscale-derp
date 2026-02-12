@@ -13,6 +13,13 @@
 - 安全性仍由 `--verify-clients` 保证（仅允许你 tailnet 的客户端通过）。
 - 对国内场景更友好：不依赖公网域名备案流程即可落地。
 
+## 实现原理
+
+- 在 `cmd/derper/cert.go` 中删除 `getCertificate` 的 hostname 强校验返回逻辑（`cert mismatch with hostname`）。
+- 其余行为保持上游默认：仍使用上游 DERPer 源码构建，并以 `CGO_ENABLED=0` 静态编译输出二进制。
+
+> 风险提示：该补丁放宽了握手阶段的 SNI 严格匹配。建议保持 `--verify-clients` 开启，并在可信网络与正确证书配置下使用。
+
 ## 镜像标签
 
 - `deepfal/tailscale-derp:latest`
