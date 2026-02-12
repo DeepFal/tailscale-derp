@@ -1,20 +1,38 @@
 # tailscale-derp
 
-这是一个面向直接使用镜像的 DERP 构建仓库，不面向二次开发。
+这个仓库只做一件事：提供可直接使用的 DERP 补丁镜像。
 
-## 这个版本的差异
+## 补丁目的
 
-- 基于上游最新 `tailscale.com/cmd/derper` 构建。
-- 打了一个兼容性补丁：移除 `cert mismatch with hostname: %q` 这一行校验报错逻辑。
-- 镜像持续自动更新，提供两个标签：
-  - `latest`
-  - `vX.Y.Z`（对应 Tailscale 发布版本）
+- 目标是部署 `IP + 端口 + --verify-clients` 的自建 DERP。
+- 补丁移除了 `cert mismatch with hostname` 这一步域名强校验，便于在 Tailscale Admin 里按 `IP:端口` 接入。
+- 安全性仍由 `--verify-clients` 保证（仅允许你 tailnet 的客户端通过）。
+- 对国内场景更友好：不依赖公网域名备案流程即可落地。
 
-## 直接拉取使用
+## 镜像标签
+
+- `deepfal/tailscale-derp:latest`
+- `deepfal/tailscale-derp:vX.Y.Z`（对应 Tailscale 发布版本）
+
+## 启动命令
 
 ```bash
-docker pull deepfal/tailscale-derp:latest
-docker pull deepfal/tailscale-derp:v1.94.1
+docker run -d \
+    --name tailscale-derp \
+    --restart unless-stopped \
+    -p 0.0.0.0:59443:36666 \
+    -p 0.0.0.0:3478:3478/udp \
+    -v /run/tailscale:/var/run/tailscale:ro \
+    deepfal/tailscale-derp:latest \
+    ./derper \
+    -hostname derp.deepfal.cn \
+    -a :36666 \
+    -certmode manual \
+    -certdir /ssl \
+    --verify-clients
 ```
 
-> 一般直接使用 `latest` 即可；需要可复现部署时使用固定版本标签。
+## 参考
+
+- Tailscale Custom DERP docs: https://tailscale.com/kb/1118/custom-derp-servers
+- `--verify-clients` 官方说明：用于限制仅你的 tailnet 客户端可用
