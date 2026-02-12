@@ -93,23 +93,16 @@ jobs:
           build_outcome = "${{ env.BUILD_OUTCOME }}"
           stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-          last_result_match = re.search(r"- 上一次构建结果：`([^`]*)`", text)
-          last_result = last_result_match.group(1) if last_result_match else "pending"
-          last_build_time_match = re.search(r"- 最后构建更新时间（UTC）：`([^`]*)`", text)
-          last_build_time = last_build_time_match.group(1) if last_build_time_match else stamp
+          last_update_match = re.search(r"- 上次更新时间（UTC）：`([^`]*)`", text)
+          last_update = last_update_match.group(1) if last_update_match else stamp
 
           text = re.sub(r"- 最新同步版本：`[^`]*`", f"- 最新同步版本：`{version}`", text)
 
-          if image_exists == "true":
-            last_result = "skipped"
+          if image_exists == "false" and build_outcome == "success":
+            last_update = stamp
 
-          if image_exists == "false" and build_outcome in ("success", "failure"):
-            last_result = build_outcome
-            last_build_time = stamp
-
-          text = re.sub(r"- 最后检查时间（UTC）：`[^`]*`", f"- 最后检查时间（UTC）：`{stamp}`", text)
-          text = re.sub(r"- 上一次构建结果：`[^`]*`", f"- 上一次构建结果：`{last_result}`", text)
-          text = re.sub(r"- 最后构建更新时间（UTC）：`[^`]*`", f"- 最后构建更新时间（UTC）：`{last_build_time}`", text)
+          text = re.sub(r"- 上次更新时间（UTC）：`[^`]*`", f"- 上次更新时间（UTC）：`{last_update}`", text)
+          text = re.sub(r"- 上次检查时间（UTC）：`[^`]*`", f"- 上次检查时间（UTC）：`{stamp}`", text)
 
           readme.write_text(text, encoding="utf-8")
           PY
