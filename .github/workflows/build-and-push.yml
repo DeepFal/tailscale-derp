@@ -60,6 +60,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push image tags
+        id: build_push
         if: steps.exists.outputs.exists == 'false'
         uses: docker/build-push-action@v6
         with:
@@ -73,7 +74,11 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/tailscale-derp:${{ steps.release.outputs.version }}
 
       - name: Update README build status
-        if: steps.exists.outputs.exists == 'false'
+        if: always()
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          IMAGE_EXISTS: ${{ steps.exists.outputs.exists }}
+          BUILD_OUTCOME: ${{ steps.build_push.outcome }}
         run: |
           python - <<'PY'
           from datetime import datetime, timezone
@@ -83,17 +88,32 @@ jobs:
           readme = Path("README.md")
           text = readme.read_text(encoding="utf-8")
 
-          version = "${{ steps.release.outputs.version }}"
+          version = "${{ env.RELEASE_VERSION }}"
+          image_exists = "${{ env.IMAGE_EXISTS }}"
+          build_outcome = "${{ env.BUILD_OUTCOME }}"
           stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-          text = re.sub(r"- 最新同步版本：`[^`]*`", f"- 最新同步版本：`{version}`", text)
-          text = re.sub(r"- 最后自动更新时间（UTC）：`[^`]*`", f"- 最后自动更新时间（UTC）：`{stamp}`", text)
+          last_result_match = re.search(r"- 上一次构建结果：`([^`]*)`", text)
+          last_result = last_result_match.group(1) if last_result_match else "pending"
+          last_build_time_match = re.search(r"- 最后构建更新时间（UTC）：`([^`]*)`", text)
+          last_build_time = last_build_time_match.group(1) if last_build_time_match else stamp
+
+          if image_exists == "false" and build_outcome in ("success", "failure"):
+            last_result = build_outcome
+            last_build_time = stamp
+
+          if image_exists == "false" and build_outcome == "success":
+            text = re.sub(r"- 最新同步版本：`[^`]*`", f"- 最新同步版本：`{version}`", text)
+
+          text = re.sub(r"- 最后检查时间（UTC）：`[^`]*`", f"- 最后检查时间（UTC）：`{stamp}`", text)
+          text = re.sub(r"- 上一次构建结果：`[^`]*`", f"- 上一次构建结果：`{last_result}`", text)
+          text = re.sub(r"- 最后构建更新时间（UTC）：`[^`]*`", f"- 最后构建更新时间（UTC）：`{last_build_time}`", text)
 
           readme.write_text(text, encoding="utf-8")
           PY
 
       - name: Commit README status update
-        if: steps.exists.outputs.exists == 'false'
+        if: always()
         run: |
           if git diff --quiet README.md; then
             echo "README unchanged, skip commit."
