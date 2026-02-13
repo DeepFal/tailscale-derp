@@ -36,12 +36,35 @@ jobs:
         id: exists
         run: |
           IMAGE="docker.io/${{ secrets.DOCKERHUB_USERNAME }}/tailscale-derp:${{ steps.release.outputs.version }}"
-          if docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+          INSPECT_JSON=$(docker manifest inspect "$IMAGE" 2>/dev/null || true)
+          if [ -n "$INSPECT_JSON" ] && INSPECT_JSON="$INSPECT_JSON" python - <<'PY'
+          import json
+          import os
+          import sys
+
+          raw = os.environ.get("INSPECT_JSON", "")
+          try:
+              data = json.loads(raw)
+          except Exception:
+              sys.exit(1)
+
+          plats = set()
+          for m in data.get("manifests", []):
+              p = m.get("platform", {})
+              arch = p.get("architecture")
+              osname = p.get("os")
+              if arch and osname:
+                  plats.add(f"{osname}/{arch}")
+
+          need = {"linux/amd64", "linux/arm64"}
+          sys.exit(0 if need.issubset(plats) else 1)
+          PY
+          then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Image exists already: $IMAGE"
+            echo "Multi-arch image exists already: $IMAGE"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Image does not exist yet: $IMAGE"
+            echo "Image missing or not multi-arch yet: $IMAGE"
           fi
 
       - name: Set up QEMU
@@ -67,6 +90,7 @@ jobs:
           context: .
           file: ./dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           build-args: |
             DERPER_REF=${{ steps.release.outputs.version }}
           tags: |
